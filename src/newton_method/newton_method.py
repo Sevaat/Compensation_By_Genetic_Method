@@ -12,69 +12,34 @@ from src.newton_method.models.parameters import Parameters
 
 
 class NewtonMethod:
-    nodes: List[Node]
-    branches: List[Branch]
-    parameters: Parameters
+    def __init__(self, nodes: List[Node], branches: List[Branch], parameters: Parameters):
+        self.nodes = nodes
+        self.branches = branches
+        self.parameters = parameters
 
-    def __init__(self):
-        data = self._load()
-        self.nodes = [Node(node) for node in data["nodes"]]
-        for branch in data["branches"]:
-            for node in self.nodes:
-                if not isinstance(branch["start"], Node):
-                    if branch["start"] == node.name:
-                        branch["start"] = node
-                if not isinstance(branch["end"], Node):
-                    if branch["end"] == node.name:
-                        branch["end"] = node
-        self.branches = [Branch(branch) for branch in data["branches"]]
-        self.parameters = Parameters(data["parameters"])
-
-    @staticmethod
-    def _load() -> Dict[str, Any]:
-        """
-        Читать JSON файл
-        :return:
-        """
-        filepath = str(Path(__file__).resolve().parent.parent.parent / "data")
-        os.makedirs(filepath, exist_ok=True)
-        filepath = f"{filepath}/data_nm.json"
-        data = {}
-        try:
-            with open(filepath, "r", encoding="utf-8") as file:
-                data = json.load(file)
-            print("Файл успешно загружен")
-        except FileNotFoundError as e:
-            print(f"Файл не найден: {e}")
-        except json.JSONDecodeError as e:
-            print(f"Ошибка в формате JSON: {e}")
-        except Exception as e:
-            print(f"Произошла ошибка: {e}")
-        return data
-
-    def _save(self) -> None:
-        """
-        Запись в JSON файл
-        :return:
-        """
-        filepath = str(Path(__file__).resolve().parent.parent.parent / "result")
-        os.makedirs(filepath, exist_ok=True)
-        filepath = f"{filepath}/result_nm_{datetime.now().strftime("%d.%m.%Y_%H-%M-%S")}.json"
-        try:
-            with open(filepath, "w", encoding="utf-8") as file:
-                nodes_list = [node.to_dict() for node in self.nodes]
-                branch_list = [branch.to_dict() for branch in self.branches]
-                full_power_loss = sum([branch.power_losses for branch in self.branches])
-                data = {
-                    "nodes": nodes_list,
-                    "branches": branch_list,
-                    "real_full_power_loss": full_power_loss.real,
-                    "imaginary_full_power_loss": full_power_loss.imag,
-                }
-                json.dump(data, file)
-            print("Запись результатов прошла успешно")
-        except Exception as e:
-            print(f"Произошла ошибка: {e}")
+    # def _save(self) -> None:
+    #     """
+    #     Запись в JSON файл
+    #     :return:
+    #     """
+    #     filepath = str(Path(__file__).resolve().parent.parent.parent / "result")
+    #     os.makedirs(filepath, exist_ok=True)
+    #     filepath = f"{filepath}/result_nm_{datetime.now().strftime("%d.%m.%Y_%H-%M-%S")}.json"
+    #     try:
+    #         with open(filepath, "w", encoding="utf-8") as file:
+    #             nodes_list = [node.to_dict() for node in self.nodes]
+    #             branch_list = [branch.to_dict() for branch in self.branches]
+    #             full_power_loss = sum([branch.power_losses for branch in self.branches])
+    #             data = {
+    #                 "nodes": nodes_list,
+    #                 "branches": branch_list,
+    #                 "real_full_power_loss": full_power_loss.real,
+    #                 "imaginary_full_power_loss": full_power_loss.imag,
+    #             }
+    #             json.dump(data, file)
+    #         print("Запись результатов прошла успешно")
+    #     except Exception as e:
+    #         print(f"Произошла ошибка: {e}")
 
     def _get_incident_matrix(self) -> numpy.ndarray:
         """
@@ -316,4 +281,3 @@ class NewtonMethod:
             self._voltage_correction(delta_voltage)
         self._currents()
         self._power_losses()
-        self._save()
